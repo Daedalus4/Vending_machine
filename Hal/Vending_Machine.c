@@ -44,12 +44,12 @@ void do_selfcheck(){//自检过程中必须全程无错才能执行下一步
       Speakaword(In_selfcheck);
       
       HAL_GPIO_WritePin(MOTO1_GPIO_Port, MOTO1_Pin, GPIO_PIN_SET);
-      HAL_GPIO_WritePin(MOTO2_GPIO_Port, MOTO2_Pin, GPIO_PIN_SET);
-      HAL_GPIO_WritePin(MOTO3_GPIO_Port, MOTO3_Pin, GPIO_PIN_SET);
+//      HAL_GPIO_WritePin(MOTO2_GPIO_Port, MOTO2_Pin, GPIO_PIN_SET);
+//      HAL_GPIO_WritePin(MOTO3_GPIO_Port, MOTO3_Pin, GPIO_PIN_SET);
       HAL_Delay(1000);
       HAL_GPIO_WritePin(MOTO1_GPIO_Port, MOTO1_Pin, GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(MOTO2_GPIO_Port, MOTO2_Pin, GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(MOTO3_GPIO_Port, MOTO3_Pin, GPIO_PIN_RESET);
+ //     HAL_GPIO_WritePin(MOTO2_GPIO_Port, MOTO2_Pin, GPIO_PIN_RESET);
+//      HAL_GPIO_WritePin(MOTO3_GPIO_Port, MOTO3_Pin, GPIO_PIN_RESET);
       
   if(VM_InnerCtrl.DoSelfCheck==ON){
     VM_InnerCtrl.SelfCheckPass=ON;
@@ -219,22 +219,21 @@ void do_selfcheck(){//自检过程中必须全程无错才能执行下一步
   
   
 }
-void do_shipment(){
-  Speakaword(In_shipment);
-  //if(VM_InnerCtrl.DoShipment==ON&&VM_InnerCtrl.SelfCheckPass==ON){//出货和自检都通过才行
-    VM_InnerCtrl.StartCheckFinish=ON;
-    VM_InnerCtrl.StartCheckState=ON;//0121测试修改为ON
-    VM_Count.HeartSwitch=OFF;
 
-    //第一步：开始检测，门锁激光、门锁开关、防盗板开关
-    if(1){
-      VM_InnerCtrl.InnerOPState=OPrunning;//开始了就报OPrunning
-      VM_Count.HeartSwitch=OFF;//开始自检后关闭心跳
-      VM_InnerCtrl.StartCheckState=ON;
-      VM_InnerCtrl.StartCheckFinish=ON;
+
+void do_shipment(){
+    Speakaword(In_shipment);
+    //VM_Count.HeartSwitch=OFF;
+
+    VM_InnerCtrl.InnerOPState=OPrunning;//开始了就报OPrunning
+   // VM_Count.HeartSwitch=OFF;
+    VM_InnerCtrl.StartCheckState=ON;
+    VM_InnerCtrl.StartCheckFinish=ON;
     VM_InnerCtrl.OpenStepMotoState=ON;
     VM_InnerCtrl.OpenStepMotoFinish=ON;
-    //第三步：开电机，只在循环中只执行一次
+    
+/*First Step:AisleMotor rotato*/
+    
     if(VM_InnerCtrl.MotoState==OFF&&VM_InnerCtrl.OpenStepMotoFinish==ON){
       VM_InnerCtrl.MotoState=ON;
       VM_Count.MotoSwitch=ON;
@@ -243,15 +242,15 @@ void do_shipment(){
         case Aisle2:HAL_GPIO_WritePin(MOTO2_GPIO_Port, MOTO2_Pin, GPIO_PIN_SET);break;
         case Aisle3:HAL_GPIO_WritePin(MOTO3_GPIO_Port, MOTO3_Pin, GPIO_PIN_SET);break;
       }
-      Speakaword(Please_take_the_goods);
+      //Speakaword(Please_take_the_goods);
       HAL_Delay(1000);
       HAL_GPIO_WritePin(MOTO1_GPIO_Port, MOTO1_Pin, GPIO_PIN_RESET);
       HAL_GPIO_WritePin(MOTO2_GPIO_Port, MOTO2_Pin, GPIO_PIN_RESET);
       HAL_GPIO_WritePin(MOTO3_GPIO_Port, MOTO3_Pin, GPIO_PIN_RESET);
-        stepmoto(OFF,1000);
-        HAL_Delay(500);
-        stepmoto(ON,1000);
-        HAL_Delay(500);
+      stepmoto(OFF,1000);//1000--over 180degree
+      HAL_Delay(100);
+      stepmoto(ON,1000);
+      HAL_Delay(100);
     }
     if(VM_Count.Motocount>500){//开始检测并停止电机，在循环中执行多次
       uint8_t MotoSensorState=0;
@@ -285,38 +284,22 @@ void do_shipment(){
         if(VM_InnerCtrl.ErrorCode==NoError)//没有报错则进行下一步
           VM_InnerCtrl.MotoFinish=ON;//电机旋转一圈执行完成
       }
-    }
+    
     VM_InnerCtrl.CloseStepMotoState=ON;
      VM_InnerCtrl.CloseStepMotoFinish=ON;
-     VM_InnerCtrl.DoorLazerCheckState=ON;
-    VM_InnerCtrl.DoorLazerCheckFinish=ON;
-    //第六步：开取货门(延时报错)，只在循环中只执行一次
-    if(VM_InnerCtrl.ShipmentDoorState==OFF&&VM_InnerCtrl.DoorLazerCheckFinish==ON){
-      VM_Count.OpenShipmentDoorSwitch=ON;
-      VM_InnerCtrl.ShipmentDoorState=ON;
-      //HAL_GPIO_WritePin(E_LOCK3_GPIO_Port, E_LOCK3_Pin, GPIO_PIN_SET);//打开取货门电磁锁
-      //Speakaword(Please_take_the_goods);
-      //HAL_GPIO_WritePin(CTRL_AOLA_GPIO_Port, CTRL_AOLA_Pin, GPIO_PIN_SET);//打开5个激光
-    }
+
     VM_InnerCtrl.ShipmentDoorFinish=ON;
     if(VM_InnerCtrl.ShipmentFinish==OFF&&VM_InnerCtrl.ShipmentDoorFinish==ON){//取完货了要判断取货门是否关好，执行多次
-      VM_Count.CloseShipmentDoorSwitch=ON;
+     // VM_Count.CloseShipmentDoorSwitch=ON;
 
-      if(1){//对准10次以上表示关好门了且出货成功
         VM_Count.CloseShipmentDoorComplete=0;
         VM_InnerCtrl.SelfCheckAisle=NoAisle;
         VM_InnerCtrl.InnerOPState=OPsuccess;//出货操作成功
         VM_InnerCtrl.DoShipment=OFF;//关闭出货开关
-        //Speakaword(Thank_you);
-        //语音：出货成功
-        //2S之后进入待机模式
-        VM_Count.OpPassSwitch=ON;//保证不用再进自检模式了
-        //先把这些个复位了先
-        VM_Count.CloseShipmentDoorSwitch=OFF;
-        VM_Count.CloseShipmentDoorcount=0;
-
-//        VM_InnerCtrl.LazerCheckState=OFF;
-//        VM_InnerCtrl.LazerCheckFinish=OFF;
+        
+        VM_Count.OpPassSwitch=ON;//after 2s standby mode
+       // VM_Count.CloseShipmentDoorSwitch=OFF;
+        //VM_Count.CloseShipmentDoorcount=0;
         VM_InnerCtrl.StartCheckState=OFF;
         VM_InnerCtrl.StartCheckFinish=OFF;
         VM_InnerCtrl.OpenStepMotoState=OFF;
@@ -325,11 +308,9 @@ void do_shipment(){
         VM_InnerCtrl.MotoFinish=OFF;
         VM_InnerCtrl.CloseStepMotoState=OFF;
         VM_InnerCtrl.CloseStepMotoFinish=OFF;
-        VM_InnerCtrl.DoorLazerCheckState=OFF;
-        VM_InnerCtrl.DoorLazerCheckFinish=OFF;
         VM_InnerCtrl.ShipmentDoorState=OFF;
         VM_InnerCtrl.ShipmentDoorFinish=OFF;
-      }
+      
     }
   }
 }
