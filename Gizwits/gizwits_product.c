@@ -360,12 +360,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       if(VM_Count.MotoSwitch==ON){//电机计时
         VM_Count.Motocount++;
       }
+      /*
       if(VM_Count.OpenShipmentDoorSwitch==ON){
         VM_Count.OpenShipmentDoorcount++;
       }
+      */
+      /*
       if(VM_Count.CloseShipmentDoorSwitch==ON){
         VM_Count.CloseShipmentDoorcount++;
       }
+      */
       if(VM_Count.OpPassSwitch==ON){
         VM_Count.OpPasscount++;
       }
